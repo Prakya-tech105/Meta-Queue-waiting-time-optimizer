@@ -95,7 +95,7 @@ def reset(req: ResetRequest | None = None) -> dict[str, Any]:
     _log("START", "reset.start", provided_session_id=request.session_id or "")
     sid = request.session_id or str(uuid.uuid4())
     _sessions[sid] = {"history": [], "metadata": request.metadata or {}}
-    _log("END", "reset.success", session_id=sid)
+    _log("STEP", "reset.success", session_id=sid)
     return {"status": "ok", "session_id": sid}
 
 
@@ -125,7 +125,7 @@ def post(payload: dict[str, Any] | None = None) -> dict[str, Any]:
     if sid:
         _sessions[sid]["history"].append({"user": prompt, "assistant": output_text})
 
-    _log("END", "post.success", session_id=sid)
+    _log("STEP", "post.success", session_id=sid)
     return {"status": "ok", "session_id": sid, "output": output_text}
 
 
