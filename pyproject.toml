@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "queue-waiting-time-optimizer-openenv"
+version = "0.1.0"
+description = "OpenEnv-compatible root service scaffold for queue waiting time optimizer"
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "pydantic",
+  "openai",
+]

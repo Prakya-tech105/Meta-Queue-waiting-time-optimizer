@@ -1,28 +1,6 @@
-version: 1
+spec_version: 1
 name: queue-waiting-time-optimizer-v3
-description: OpenEnv-compatible inference service for queue waiting time optimization.
-
-runtime:
-  type: docker
-  dockerfile: Dockerfile
-
-inference:
-  entrypoint: inference.py
-  host: 0.0.0.0
-  port: 7860
-  endpoints:
-    health: /
-    reset: /reset
-    post: /post
-
-env:
-  API_BASE_URL:
-    required: false
-    default: https://api.openai.com/v1
-  MODEL_NAME:
-    required: false
-    default: gpt-4o-mini
-  HF_TOKEN:
-    required: false
-  LOCAL_IMAGE_NAME:
-    required: false
+type: environment
+runtime: docker
+app: server.app:app
+port: 7860
