@@ -33,6 +33,15 @@ def _build_client() -> OpenAI | None:
     return OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
 
+def _run_llm_call(client: OpenAI, prompt: str) -> str:
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
+        timeout=20.0,
+    )
+    return (response.choices[0].message.content or "").strip()
+
+
 def _extract_prompt(payload: dict[str, Any]) -> str:
     if "messages" in payload and isinstance(payload["messages"], list) and payload["messages"]:
         last = payload["messages"][-1]
@@ -102,31 +111,26 @@ def post(payload: dict[str, Any] | None = None) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    import socket
-    import uvicorn
-
     _log(
         "START",
-        "service.boot",
+        "inference.start",
         api_base_url=API_BASE_URL,
         model_name=MODEL_NAME,
         local_image_name=LOCAL_IMAGE_NAME or "",
     )
-    
-    # Find available port starting from configured PORT env var
-    configured_port = int(os.getenv("PORT", "7860"))
-    available_port = configured_port
-    
-    for offset in range(10):
-        test_port = configured_port + offset
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind(("0.0.0.0", test_port))
-                s.close()
-                available_port = test_port
-                break
-        except OSError:
-            continue
-    
-    _log("STEP", "port.assigned", configured_port=configured_port, actual_port=available_port)
-    uvicorn.run(app, host="0.0.0.0", port=available_port)
+
+    try:
+        _log("STEP", "client.initialize")
+        client = _build_client()
+
+        if client is None:
+            _log("STEP", "llm.skip", reason="missing_hf_token")
+            output_text = "Queue Waiting Time Optimizer ready."
+        else:
+            _log("STEP", "llm.request")
+            output_text = _run_llm_call(client, "Return exactly: Queue Waiting Time Optimizer ready.")
+
+        _log("END", "inference.success", output=output_text)
+    except Exception as exc:
+        _log("END", "inference.error", error=str(exc))
+        raise
