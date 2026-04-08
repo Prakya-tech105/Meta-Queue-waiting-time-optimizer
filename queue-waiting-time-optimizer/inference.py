@@ -74,11 +74,11 @@ def main() -> None:
             output_text = _run_llm_call(client, "Return exactly: Queue Waiting Time Optimizer ready.")
 
         _emit_task_blocks()
-        _log("END", "inference.success", output=output_text)
+        _log("STEP", "inference.success", output=output_text)
     except Exception as exc:
         _log("STEP", "inference.fallback", reason="runtime_error", error=str(exc))
         _emit_task_blocks()
-        _log("END", "inference.success", output="Queue Waiting Time Optimizer ready.")
+        _log("STEP", "inference.success", output="Queue Waiting Time Optimizer ready.")
 
 
 if __name__ == "__main__":
