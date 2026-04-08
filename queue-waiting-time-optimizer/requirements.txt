@@ -1,0 +1,12 @@
+numpy
+cloudpickle
+gymnasium
+stable-baselines3
+torch
+matplotlib
+plotly
+gradio
+pandas
+pyyaml
+openenv
+pytest
