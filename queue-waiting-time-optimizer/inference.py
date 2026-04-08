@@ -29,11 +29,11 @@ def _build_client() -> OpenAI:
 
 
 def _run_llm_call(client: OpenAI, prompt: str) -> str:
-    response = client.responses.create(
+    response = client.chat.completions.create(
         model=MODEL_NAME,
-        input=prompt,
+        messages=[{"role": "user", "content": prompt}]
     )
-    return (response.output_text or "").strip()
+    return (response.choices[0].message.content or "").strip()
 
 
 def main() -> None:

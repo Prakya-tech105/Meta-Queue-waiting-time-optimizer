@@ -88,8 +88,11 @@ def post(payload: dict[str, Any] | None = None) -> dict[str, Any]:
         output_text = f"Echo: {prompt}"
     else:
         _log("STEP", "llm.request")
-        response = client.responses.create(model=MODEL_NAME, input=prompt)
-        output_text = (response.output_text or "").strip()
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        output_text = (response.choices[0].message.content or "").strip()
 
     if sid:
         _sessions[sid]["history"].append({"user": prompt, "assistant": output_text})
@@ -99,6 +102,7 @@ def post(payload: dict[str, Any] | None = None) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
+    import socket
     import uvicorn
 
     _log(
@@ -108,4 +112,21 @@ if __name__ == "__main__":
         model_name=MODEL_NAME,
         local_image_name=LOCAL_IMAGE_NAME or "",
     )
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "7860")))
+    
+    # Find available port starting from configured PORT env var
+    configured_port = int(os.getenv("PORT", "7860"))
+    available_port = configured_port
+    
+    for offset in range(10):
+        test_port = configured_port + offset
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(("0.0.0.0", test_port))
+                s.close()
+                available_port = test_port
+                break
+        except OSError:
+            continue
+    
+    _log("STEP", "port.assigned", configured_port=configured_port, actual_port=available_port)
+    uvicorn.run(app, host="0.0.0.0", port=available_port)
