@@ -26,7 +26,7 @@ _sessions: dict[str, dict[str, Any]] = {}
 
 def _log(event: str, message: str, **fields: Any) -> None:
     payload = {"message": message, **fields}
-    print(f"{event} {json.dumps(payload, ensure_ascii=True)}", flush=True)
+    print(f"[{event}] {json.dumps(payload, ensure_ascii=True)}", flush=True)
 
 
 def _build_client() -> Any | None:
