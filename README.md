@@ -3,10 +3,9 @@ title: Queue Waiting Time Optimizer V3
 emoji: 🐠
 colorFrom: purple
 colorTo: gray
-sdk: gradio
-sdk_version: 6.11.0
-app_file: app.py
+app_port: 7860
 pinned: false
+sdk: docker
 ---
 
 # Queue Waiting Time Optimizer V3
