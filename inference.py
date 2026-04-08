@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import os
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import FastAPI
-from openai import OpenAI
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from openai import OpenAI
 
 # Defaults are intentionally only for API_BASE_URL and MODEL_NAME.
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
@@ -27,13 +29,18 @@ def _log(event: str, message: str, **fields: Any) -> None:
     print(f"{event} {json.dumps(payload, ensure_ascii=True)}", flush=True)
 
 
-def _build_client() -> OpenAI | None:
+def _build_client() -> Any | None:
     if not HF_TOKEN:
+        return None
+    try:
+        from openai import OpenAI  # Lazy import to avoid import-time crashes.
+    except Exception as exc:
+        _log("STEP", "client.unavailable", error=str(exc))
         return None
     return OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
 
-def _run_llm_call(client: OpenAI, prompt: str) -> str:
+def _run_llm_call(client: Any, prompt: str) -> str:
     response = client.chat.completions.create(
         model=MODEL_NAME,
         messages=[{"role": "user", "content": prompt}],

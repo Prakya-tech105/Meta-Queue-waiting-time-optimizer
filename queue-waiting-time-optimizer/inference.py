@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from openai import OpenAI
+if TYPE_CHECKING:
+    from openai import OpenAI
 
 # Required env vars for runtime configuration.
 # Defaults are intentionally set only for API_BASE_URL and MODEL_NAME.
@@ -21,14 +22,18 @@ def _log(event: str, message: str, **fields: Any) -> None:
     print(f"{event} {json.dumps(payload, ensure_ascii=True)}", flush=True)
 
 
-def _build_client() -> OpenAI:
+def _build_client() -> Any:
     if not HF_TOKEN:
         raise RuntimeError("HF_TOKEN is required and must be set in the environment")
+    try:
+        from openai import OpenAI  # Lazy import to avoid import-time crashes.
+    except Exception as exc:
+        raise RuntimeError(f"openai package unavailable: {exc}") from exc
 
     return OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
 
-def _run_llm_call(client: OpenAI, prompt: str) -> str:
+def _run_llm_call(client: Any, prompt: str) -> str:
     response = client.chat.completions.create(
         model=MODEL_NAME,
         messages=[{"role": "user", "content": prompt}],
