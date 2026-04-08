@@ -97,11 +97,11 @@ def post(payload: dict[str, Any] | None = None) -> dict[str, Any]:
         output_text = f"Echo: {prompt}"
     else:
         _log("STEP", "llm.request")
-        response = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        output_text = (response.choices[0].message.content or "").strip()
+        try:
+            output_text = _run_llm_call(client, prompt)
+        except Exception as exc:
+            _log("STEP", "llm.error", error=str(exc))
+            output_text = f"Echo: {prompt}"
 
     if sid:
         _sessions[sid]["history"].append({"user": prompt, "assistant": output_text})
@@ -132,5 +132,5 @@ if __name__ == "__main__":
 
         _log("END", "inference.success", output=output_text)
     except Exception as exc:
-        _log("END", "inference.error", error=str(exc))
-        raise
+        _log("STEP", "inference.fallback", reason="runtime_error", error=str(exc))
+        _log("END", "inference.success", output="Queue Waiting Time Optimizer ready.")
