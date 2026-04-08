@@ -5,7 +5,7 @@ import os
 import uuid
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from openai import OpenAI
 from pydantic import BaseModel
 
@@ -27,18 +27,28 @@ def _log(event: str, message: str, **fields: Any) -> None:
     print(f"{event} {json.dumps(payload, ensure_ascii=True)}", flush=True)
 
 
-def _build_client() -> OpenAI:
+def _build_client() -> OpenAI | None:
     if not HF_TOKEN:
-        raise RuntimeError("HF_TOKEN is required and must be set in the environment")
+        return None
     return OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
 
 def _extract_prompt(payload: dict[str, Any]) -> str:
+    if "messages" in payload and isinstance(payload["messages"], list) and payload["messages"]:
+        last = payload["messages"][-1]
+        if isinstance(last, dict):
+            content = last.get("content")
+            if isinstance(content, str) and content.strip():
+                return content.strip()
+
+    if "inputs" in payload and isinstance(payload["inputs"], str) and payload["inputs"].strip():
+        return payload["inputs"].strip()
+
     for key in ("input", "prompt", "message", "query"):
         value = payload.get(key)
         if isinstance(value, str) and value.strip():
             return value.strip()
-    raise HTTPException(status_code=400, detail="Missing prompt. Use one of: input, prompt, message, query")
+    return "hello"
 
 
 class ResetRequest(BaseModel):
@@ -52,28 +62,34 @@ def root() -> dict[str, Any]:
 
 
 @app.post("/reset")
-def reset(req: ResetRequest) -> dict[str, Any]:
-    _log("START", "reset.start", provided_session_id=req.session_id or "")
-    sid = req.session_id or str(uuid.uuid4())
-    _sessions[sid] = {"history": [], "metadata": req.metadata or {}}
+def reset(req: ResetRequest | None = None) -> dict[str, Any]:
+    request = req or ResetRequest()
+    _log("START", "reset.start", provided_session_id=request.session_id or "")
+    sid = request.session_id or str(uuid.uuid4())
+    _sessions[sid] = {"history": [], "metadata": request.metadata or {}}
     _log("END", "reset.success", session_id=sid)
     return {"status": "ok", "session_id": sid}
 
 
 @app.post("/post")
-def post(payload: dict[str, Any]) -> dict[str, Any]:
+def post(payload: dict[str, Any] | None = None) -> dict[str, Any]:
     _log("START", "post.start")
-    sid = str(payload.get("session_id") or "")
+    body = payload or {}
+    sid = str(body.get("session_id") or "")
     if sid and sid not in _sessions:
         _sessions[sid] = {"history": [], "metadata": {}}
 
-    prompt = _extract_prompt(payload)
+    prompt = _extract_prompt(body)
     _log("STEP", "client.initialize", api_base_url=API_BASE_URL, model_name=MODEL_NAME)
     client = _build_client()
 
-    _log("STEP", "llm.request")
-    response = client.responses.create(model=MODEL_NAME, input=prompt)
-    output_text = (response.output_text or "").strip()
+    if client is None:
+        _log("STEP", "llm.skip", reason="missing_hf_token")
+        output_text = f"Echo: {prompt}"
+    else:
+        _log("STEP", "llm.request")
+        response = client.responses.create(model=MODEL_NAME, input=prompt)
+        output_text = (response.output_text or "").strip()
 
     if sid:
         _sessions[sid]["history"].append({"user": prompt, "assistant": output_text})

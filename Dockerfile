@@ -6,8 +6,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY queue-waiting-time-optimizer/requirements.txt /app/requirements.txt
-RUN pip install --upgrade pip && pip install -r /app/requirements.txt
+RUN pip install --upgrade pip && pip install \
+    fastapi \
+    uvicorn \
+    pydantic \
+    openai
 
 COPY . /app
 
