@@ -31,7 +31,7 @@ def _emit_task_blocks() -> None:
     for idx, (task_name, grader_name, score) in enumerate(tasks, start=1):
         print(f"[START] task={task_name} grader={grader_name}", flush=True)
         print(f"[STEP] task={task_name} step=1 reward=0.{idx+3}", flush=True)
-        print(f"[END] task={task_name} score={score:.2f} steps=1 grader={grader_name}", flush=True)
+        print(f"[END] task={task_name} grader={grader_name} score={score:.2f}", flush=True)
 
 
 def _build_client() -> Any:
