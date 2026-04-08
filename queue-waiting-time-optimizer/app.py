@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import sys
 
@@ -12,8 +13,9 @@ from src.gradio_app import build_demo
 
 def main() -> None:
     demo = build_demo()
-    # Bind to localhost for direct browser access and let Gradio pick an open port.
-    demo.launch(server_name="127.0.0.1")
+    # Spaces requires 0.0.0.0, while localhost is best for local preview.
+    host = "0.0.0.0" if os.getenv("SPACE_ID") else "127.0.0.1"
+    demo.launch(server_name=host)
 
 
 if __name__ == "__main__":
