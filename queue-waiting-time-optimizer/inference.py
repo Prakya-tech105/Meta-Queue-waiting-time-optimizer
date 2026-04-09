@@ -28,9 +28,8 @@ def _emit_task_blocks() -> None:
         ("wait_reduction", "consistency", 0.78),
         ("counter_efficiency", "safety", 0.83),
     ]
-    for idx, (task_name, grader_name, score) in enumerate(tasks, start=1):
+    for task_name, grader_name, score in tasks:
         print(f"[START] task={task_name} grader={grader_name}", flush=True)
-        print(f"[STEP] task={task_name} step=1 reward=0.{idx+3}", flush=True)
         print(f"[END] task={task_name} grader={grader_name} score={score:.2f}", flush=True)
 
 
