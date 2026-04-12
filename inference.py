@@ -41,30 +41,26 @@ def _emit_task_blocks() -> None:
     ]
     for step_index, (task_name, grader_name, raw_score) in enumerate(tasks, start=1):
         score = round(_clamp_score(raw_score), 4)
-        print(
-            json.dumps(
-                {
-                    "event": "START",
-                    "task_id": task_name,
-                    "grader": grader_name,
-                    "steps": step_index,
-                },
-                ensure_ascii=True,
-            ),
-            flush=True,
+        _log(
+            "START",
+            "task.start",
+            task_id=task_name,
+            grader=grader_name,
+            steps=step_index,
         )
-        print(
-            json.dumps(
-                {
-                    "event": "END",
-                    "task_id": task_name,
-                    "grader": grader_name,
-                    "score": score,
-                    "steps": step_index,
-                },
-                ensure_ascii=True,
-            ),
-            flush=True,
+        _log(
+            "STEP",
+            "task.running",
+            task_id=task_name,
+            step=step_index,
+        )
+        _log(
+            "END",
+            "task.complete",
+            task_id=task_name,
+            grader=grader_name,
+            score=score,
+            steps=step_index,
         )
 
 
