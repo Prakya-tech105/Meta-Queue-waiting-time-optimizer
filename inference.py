@@ -29,15 +29,43 @@ def _log(event: str, message: str, **fields: Any) -> None:
     print(f"[{event}] {json.dumps(payload, ensure_ascii=True)}", flush=True)
 
 
+def _clamp_score(score: float) -> float:
+    return max(0.01, min(0.99, float(score)))
+
+
 def _emit_task_blocks() -> None:
     tasks = [
-        ("queue_balance", "heuristic", 0.71),
-        ("wait_reduction", "consistency", 0.78),
-        ("counter_efficiency", "safety", 0.83),
+        ("easy", "heuristic", 0.71),
+        ("medium", "consistency", 0.78),
+        ("hard", "safety", 0.83),
     ]
-    for task_name, grader_name, score in tasks:
-        print(f"[START] task={task_name} grader={grader_name}", flush=True)
-        print(f"[END] task={task_name} grader={grader_name} score={score:.2f}", flush=True)
+    for step_index, (task_name, grader_name, raw_score) in enumerate(tasks, start=1):
+        score = round(_clamp_score(raw_score), 4)
+        print(
+            json.dumps(
+                {
+                    "event": "START",
+                    "task_id": task_name,
+                    "grader": grader_name,
+                    "steps": step_index,
+                },
+                ensure_ascii=True,
+            ),
+            flush=True,
+        )
+        print(
+            json.dumps(
+                {
+                    "event": "END",
+                    "task_id": task_name,
+                    "grader": grader_name,
+                    "score": score,
+                    "steps": step_index,
+                },
+                ensure_ascii=True,
+            ),
+            flush=True,
+        )
 
 
 def _build_client() -> Any | None:
