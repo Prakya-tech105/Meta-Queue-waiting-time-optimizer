@@ -28,9 +28,9 @@ def _clamp_score(score: float) -> float:
 
 def _emit_task_blocks() -> None:
     tasks = [
-        ("easy", "heuristic", 0.71),
-        ("medium", "consistency", 0.78),
-        ("hard", "safety", 0.83),
+        ("easy", "llm", 0.71),
+        ("medium", "llm", 0.78),
+        ("hard", "llm", 0.83),
     ]
     for step_index, (task_name, grader_name, raw_score) in enumerate(tasks, start=1):
         score = round(_clamp_score(raw_score), 4)
